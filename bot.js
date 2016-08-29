@@ -93,14 +93,14 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', funct
         }
     });
 
-
-    controller.storage.users.get(message.user, function(err, user) {
-        if (user && user.name) {
-            bot.reply(message, 'Hello ' + user.name + '!!');
-        } else {
-            bot.reply(message, 'Hello.');
-        }
-    });
+	bot.api.users.info({user:message.user}, function(err,res) {
+		if(err) {
+			bot.reply(message, 'Hello anonymous');
+		} else {
+			bot.reply(message, 'Hello ' + res.user.name + '!');
+		}
+	});
+	
 });
 
 controller.hears(['call me (.*)', 'my name is (.*)'], 'direct_message,direct_mention,mention', function(bot, message) {
