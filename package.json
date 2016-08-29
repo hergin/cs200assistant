@@ -1,0 +1,29 @@
+{
+    "name": "cs200assistant",
+    "version": "0.1.0",
+    "description": "Huseyin's assistant in CS 200 class",
+    "main": "bot.js",
+    "scripts": {
+        "start": "node bot.js"
+    },
+    "dependencies": {
+        "botkit": "0.2.2"
+    },
+    "engines": {
+        "node": "4.5.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/hergin/cs200assistant.git"
+    },
+    "keywords": [
+        "bots",
+        "chatbots",
+        "slack",
+        "software",
+		"class",
+		"teaching"
+    ],
+    "author": "hsynrgn",
+    "license": "MIT"
+}
