@@ -71,6 +71,16 @@ if (!process.env.token) {
 
 var Botkit = require('./node_modules/botkit/lib/Botkit.js');
 var os = require('os');
+var csv = require('csv-parser');
+var fs = require('fs');
+
+var grades = [];
+
+fs.createReadStream('grades.csv')
+	.pipe(csv())
+	.on('data', function(data) {
+		grades.push(data);
+	});
 
 var controller = Botkit.slackbot({
     debug: true
@@ -79,6 +89,12 @@ var controller = Botkit.slackbot({
 var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
+
+controller.hears(['grades'], 'direct_message,direct_mention,mention', function(bot, message) {
+	
+	bot.reply(message, ''+grades[0].Lab1);
+	
+});
 
 
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', function(bot, message) {
