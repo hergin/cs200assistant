@@ -8,7 +8,8 @@
     },
     "dependencies": {
         "botkit": "0.2.2",
-		"csv-parser": "1.11.0"
+		"csv-parser": "1.11.0",
+		"simple-node-logger": "0.93.12"
     },
     "engines": {
         "node": "4.5.0"

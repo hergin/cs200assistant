@@ -24,6 +24,13 @@ var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
+var SimpleNodeLogger = require('simple-node-logger'),
+	opts = {
+		logFilePath:'assistant.log',
+		timestampFormat:'YYYY-MM-DD HH:mm:ss.SSS'
+	},
+	log = SimpleNodeLogger.createSimpleLogger( opts );
+
 controller.hears(['my information'], 'direct_message', function(bot, message) {
 	bot.api.users.info({user:message.user}, function(err,res) {
 		if(err) {
@@ -36,6 +43,7 @@ controller.hears(['my information'], 'direct_message', function(bot, message) {
 				}
 			}
 			bot.reply(message, '_Here is the all information I have about you:_\n' + info);
+			log.info(grades[res.user.name].slackID+" requested his/her information.");
 		}
 	});	
 });
