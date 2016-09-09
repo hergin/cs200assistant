@@ -80,6 +80,21 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', funct
 	
 });
 
+controller.hears(['roll tide'], 'direct_message,direct_mention,mention', function(bot, message) {
+
+    bot.api.reactions.add({
+        timestamp: message.ts,
+        channel: message.channel,
+        name: 'elephant',
+    }, function(err, res) {
+        if (err) {
+            bot.botkit.log('Failed to add emoji reaction :(', err);
+        }
+    });
+
+	bot.reply(message, 'ROLLLLLLLL!');
+});
+
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function(bot, message) {
 
