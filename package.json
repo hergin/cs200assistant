@@ -1,15 +1,16 @@
 {
     "name": "cs200assistant",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Huseyin's assistant in CS 200 class",
     "main": "bot.js",
     "scripts": {
         "start": "node bot.js"
     },
     "dependencies": {
-        "botkit": "0.2.2",
+        "botkit": "0.4.9",
 		"csv-parser": "1.11.0",
-		"simple-node-logger": "0.93.12"
+		"simple-node-logger": "0.93.12",
+        "node-persist": "2.0.7"
     },
     "engines": {
         "node": "4.5.0"

@@ -7,6 +7,8 @@ var Botkit = require('./node_modules/botkit/lib/Botkit.js');
 var os = require('os');
 var csv = require('csv-parser');
 var fs = require('fs');
+var storage = require('node-persist');
+storage.initSync();
 
 var grades = [];
 
@@ -24,6 +26,9 @@ var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
+if(storage.keys().indexOf("requestedSettings")===-1)
+    storage.setItemSync("requestedSettings",["bitbucketID","bitbucketemail","mybamaID"]);
+
 var SimpleNodeLogger = require('simple-node-logger'),
 	opts = {
 		logFilePath:'assistant.log',
@@ -31,7 +36,76 @@ var SimpleNodeLogger = require('simple-node-logger'),
 	},
 	log = SimpleNodeLogger.createSimpleLogger( opts );
 
-controller.hears(['my information'], 'direct_message', function(bot, message) {
+var settingFunction = function(settingID) {
+    var requested = storage.getItemSync("requestedSettings");
+    if(requested.indexOf(settingID)===-1){
+        requested.push(settingID);
+        storage.setItemSync("requestedSettings",requested);
+    }
+    controller.hears([settingID+' (.*)'],'direct_message',function(bot,message){
+        var input = message.match[1];
+        var oldValue = storage.getItemSync(message.user);
+        oldValue[settingID] = input;
+        storage.setItemSync(message.user,oldValue);
+        bot.api.users.info({user:message.user}, function(err,res) {
+            if(err){
+
+            } else {
+                if(!oldValue.hasOwnProperty('slackID')) {
+                    oldValue['slackID'] = res.user.name;
+                    storage.setItemSync(message.user,oldValue);
+                }
+                bot.reply(message,'Thanks for setting your '+settingID+'!');
+            }
+        });
+    });
+};
+
+var requested = storage.getItemSync("requestedSettings");
+
+requested.forEach(function(item){
+    settingFunction(item);
+});
+
+controller.hears(['information'],'direct_message',function(bot,message){
+    var value = storage.getItemSync(message.user);
+    bot.api.users.info({user:message.user}, function(err,res) {
+        if(err){
+
+        } else {
+            var info="";
+			for(var prop in value) {
+				if(value.hasOwnProperty(prop)) {
+					info+=prop+": *"+value[prop]+"*\n";
+				}
+			}
+            bot.reply(message,'Here are your information:\n'+ info);
+        }
+    });
+});
+
+controller.hears(['ask (.*)'],'direct_message',function(bot,message){
+    if(message.user=='U3TGG2W94'){
+        var toAsk = message.match[1];
+        var requested = storage.getItemSync("requestedSettings");
+        if(requested.indexOf(toAsk)===-1){
+            requested.push(toAsk);
+            storage.setItemSync("requestedSettings",requested);
+        }
+        bot.api.users.list({},function(err,res) {
+            if(err){
+
+            } else {
+                res.members.forEach(function(element) {
+                    bot.say({text:'Please provide your *'+toAsk+'* information by typing `'+toAsk+' VALUE` to me!',channel:''+element.id});
+                    settingFunction(toAsk);
+                });
+            }
+        });
+    }
+});
+
+controller.hears(['grades'], 'direct_message', function(bot, message) {
 	bot.api.users.info({user:message.user}, function(err,res) {
 		if(err) {
 			bot.reply(message, 'Hello anonymous');
@@ -42,13 +116,13 @@ controller.hears(['my information'], 'direct_message', function(bot, message) {
 					info+=prop+": *"+grades[res.user.name][prop]+"*\n";
 				}
 			}
-			bot.reply(message, '_Here is the all information I have about you:_\n' + info);
-			log.info(grades[res.user.name].slackID+" requested his/her information.");
+			bot.reply(message, '_Here is the all of your grades:_\n' + info);
+			log.info(grades[res.user.name].slackID+" requested his/her grades.");
 		}
 	});	
 });
 
-controller.hears(['my information'], 'direct_mention,mention', function(bot, message) {
+controller.hears(['grades'], 'direct_mention,mention', function(bot, message) {
 	bot.api.users.info({user:message.user}, function(err,res) {
 		if(err) {
 			bot.reply(message, 'Hello anonymous');
