@@ -58,6 +58,7 @@ var settingFunction = function(settingID) {
                     storage.setItemSync(message.user,oldValue);
                 }
                 bot.reply(message,'Thanks for setting your '+settingID+'!');
+                log.info(res.user.name+" set his/her "+settingID);
             }
         });
     });
@@ -90,6 +91,7 @@ controller.hears(['information'],'direct_message',function(bot,message){
 				}
 			}
             bot.reply(message,'Here are your information:\n'+ info);
+            log.info(res.user.name+" asked his/her information.");
         }
     });
 });
@@ -106,9 +108,11 @@ controller.hears(['ask (.*)'],'direct_message',function(bot,message){
             if(err){
                 bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
             } else {
+                settingFunction(toAsk);
                 res.members.forEach(function(element) {
-                    bot.say({text:'Please provide your *'+toAsk+'* information by typing `'+toAsk+' VALUE` to me!',channel:''+element.id});
-                    settingFunction(toAsk);
+                    if(storage.getItemSync(element.id) != undefined && !storage.getItemSync(element.id).hasOwnProperty(toAsk)){
+                        bot.say({text:'Please provide your *'+toAsk+'* information by typing `'+toAsk+' VALUE` to me!',channel:''+element.id});
+                    }
                 });
             }
         });
@@ -121,6 +125,7 @@ controller.hears(['grades'], 'direct_message', function(bot, message) {
 			bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
 		} else {
             bot.reply(message, "Coming soon!");
+            log.info(res.user.name+" asked his/her grades.");
 /*			var info="";
 			for(var prop in grades[res.user.name]) {
 				if(grades[res.user.name].hasOwnProperty(prop)) {
@@ -164,6 +169,7 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', funct
             if(userinfo!=undefined && userinfo.hasOwnProperty("name"))
                 username = userinfo['name'];
             bot.reply(message, 'Hello ' + username + '!');
+            log.info(res.user.name+" said hello.");
 		}
 	});
 	
@@ -180,8 +186,14 @@ controller.hears(['roll tide'], 'direct_message,direct_mention,mention', functio
             bot.botkit.log('Failed to add emoji reaction :(', err);
         }
     });
+    bot.api.users.info({user:message.user}, function(err,res) {
+		if(err) {
 
-	bot.reply(message, 'ROLLLLLLLL!');
+        } else{
+            log.info(res.user.name+" rolled the tide.");
+	        bot.reply(message, 'ROLLLLLLLL!');
+        }
+    });
 });
 
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],

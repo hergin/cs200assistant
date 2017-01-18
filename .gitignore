@@ -9,6 +9,9 @@ pids
 *.seed
 *.pid.lock
 
+#launch
+launch.json
+
 # persist files
 .node-persist
 
