@@ -9,6 +9,9 @@ pids
 *.seed
 *.pid.lock
 
+# persist files
+.node-persist
+
 # actual class data
 cs200.csv
 

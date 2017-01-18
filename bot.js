@@ -10,13 +10,13 @@ var fs = require('fs');
 var storage = require('node-persist');
 storage.initSync();
 
-var grades = [];
+//var grades = [];
 
-fs.createReadStream('cs200.csv')
-	.pipe(csv())
-	.on('data', function(data) {
-		grades[data.slackID] = data;
-	});
+//fs.createReadStream('cs200.csv')
+//	.pipe(csv())
+//	.on('data', function(data) {
+//		grades[data.slackID] = data;
+//	});
 
 var controller = Botkit.slackbot({
     debug: true
@@ -27,7 +27,7 @@ var bot = controller.spawn({
 }).startRTM();
 
 if(storage.keys().indexOf("requestedSettings")===-1)
-    storage.setItemSync("requestedSettings",["bitbucketID","bitbucketemail","mybamaID"]);
+    storage.setItemSync("requestedSettings",["name","bitbucketID","bitbucketemail","mybamaID"]);
 
 var SimpleNodeLogger = require('simple-node-logger'),
 	opts = {
@@ -45,11 +45,13 @@ var settingFunction = function(settingID) {
     controller.hears([settingID+' (.*)'],'direct_message',function(bot,message){
         var input = message.match[1];
         var oldValue = storage.getItemSync(message.user);
+		if(oldValue==undefined)
+			oldValue={};
         oldValue[settingID] = input;
         storage.setItemSync(message.user,oldValue);
         bot.api.users.info({user:message.user}, function(err,res) {
             if(err){
-
+                bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
             } else {
                 if(!oldValue.hasOwnProperty('slackID')) {
                     oldValue['slackID'] = res.user.name;
@@ -67,11 +69,19 @@ requested.forEach(function(item){
     settingFunction(item);
 });
 
+controller.hears(['commands'],'direct_message',function(bot,message){
+    var commands="`commands`\n`information`\n`grades`\n`hello`\n`roll tide`\n";
+    storage.getItemSync("requestedSettings").forEach(function(item){
+        commands+="`"+item+" VALUE`\n";
+    });
+    bot.reply(message,'Here are all commands available. Put the actual value instead of VALUE:\n'+ commands);
+});
+
 controller.hears(['information'],'direct_message',function(bot,message){
     var value = storage.getItemSync(message.user);
     bot.api.users.info({user:message.user}, function(err,res) {
         if(err){
-
+            bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
         } else {
             var info="";
 			for(var prop in value) {
@@ -94,7 +104,7 @@ controller.hears(['ask (.*)'],'direct_message',function(bot,message){
         }
         bot.api.users.list({},function(err,res) {
             if(err){
-
+                bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
             } else {
                 res.members.forEach(function(element) {
                     bot.say({text:'Please provide your *'+toAsk+'* information by typing `'+toAsk+' VALUE` to me!',channel:''+element.id});
@@ -108,16 +118,17 @@ controller.hears(['ask (.*)'],'direct_message',function(bot,message){
 controller.hears(['grades'], 'direct_message', function(bot, message) {
 	bot.api.users.info({user:message.user}, function(err,res) {
 		if(err) {
-			bot.reply(message, 'Hello anonymous');
+			bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
 		} else {
-			var info="";
+            bot.reply(message, "Coming soon!");
+/*			var info="";
 			for(var prop in grades[res.user.name]) {
 				if(grades[res.user.name].hasOwnProperty(prop)) {
 					info+=prop+": *"+grades[res.user.name][prop]+"*\n";
 				}
 			}
 			bot.reply(message, '_Here is the all of your grades:_\n' + info);
-			log.info(grades[res.user.name].slackID+" requested his/her grades.");
+			log.info(grades[res.user.name].slackID+" requested his/her grades.");*/
 		}
 	});	
 });
@@ -125,9 +136,9 @@ controller.hears(['grades'], 'direct_message', function(bot, message) {
 controller.hears(['grades'], 'direct_mention,mention', function(bot, message) {
 	bot.api.users.info({user:message.user}, function(err,res) {
 		if(err) {
-			bot.reply(message, 'Hello anonymous');
+			bot.reply(message, 'Some error occured and I am working to fix it. I may not be avaible now!');
 		} else {
-			bot.reply(message, "This is not a place to discuss private information "+grades[res.user.name].firstName+"\n"+"Ask me in a direct message ;)");
+			bot.reply(message, "This is not a place to discuss private information "+res.user.name+"\n"+"Ask me in a direct message ;)");
 		}
 	});	
 });
@@ -148,7 +159,11 @@ controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', funct
 		if(err) {
 			bot.reply(message, 'Hello anonymous');
 		} else {
-			bot.reply(message, 'Hello ' + grades[res.user.name].firstName + '!');
+            var userinfo = storage.getItemSync(message.user);
+            var username = res.user.name;
+            if(userinfo!=undefined && userinfo.hasOwnProperty("name"))
+                username = userinfo['name'];
+            bot.reply(message, 'Hello ' + username + '!');
 		}
 	});
 	
